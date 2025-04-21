@@ -1,48 +1,35 @@
 FROM ubuntu:20.04
 
-# Noninteractive mode for Ubuntu
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install system dependencies
+# Install core dependencies
 RUN apt-get update && apt-get install -y \
-    wget \
-    curl \
-    python3 \
-    python3-pip \
-    python3-dev \
-    software-properties-common \
-    build-essential \
-    xpdf \
-    fontconfig \
-    libfontforge1 \
-    ghostscript \
-    poppler-utils \
-    ttfautohint \
-    libjpeg-dev \
-    zlib1g-dev \
-    libpng-dev \
-    libpoppler-glib-dev \
-    libpango1.0-dev \
-    libcroco3-dev \
-    libcairo2-dev \
-    libxml2-dev \
-    libglib2.0-dev \
-    git \
-    cmake \
-    pkg-config
+    python3 python3-pip \
+    git cmake g++ make pkg-config \
+    libfontforge-dev libpoppler-glib-dev \
+    libjpeg-dev libpng-dev libtiff-dev \
+    libxml2-dev libglib2.0-dev \
+    libcairo2-dev libpango1.0-dev \
+    ttfautohint fontconfig curl wget \
+    && apt-get clean
 
-# Clone and build pdf2htmlex from source
-RUN git clone https://github.com/coolwanglu/pdf2htmlEX.git /opt/pdf2htmlEX && \
+# Build and install pdf2htmlEX from source
+RUN git clone --recursive https://github.com/coolwanglu/pdf2htmlEX.git /opt/pdf2htmlEX && \
     cd /opt/pdf2htmlEX && \
     cmake . && \
     make && make install
 
-# Set up app directory
+# Set working directory
 WORKDIR /app
+
+# Copy app files
 COPY . /app
 
 # Install Python dependencies
 RUN pip3 install --no-cache-dir -r requirements.txt
 
-# Run the app
+# Expose the app port
+EXPOSE 10000
+
+# Start the FastAPI server
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "10000"]
